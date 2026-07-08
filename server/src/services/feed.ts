@@ -5,6 +5,7 @@ import { profileAsync } from "../core/server-timing";
 import { feeds, visits, visitStats } from "../db/schema";
 import { HyperLogLog } from "../utils/hyperloglog";
 import { extractImageWithMetadata } from "../utils/image";
+import { stripMarkdown } from "../utils/markdown";
 import { syncFeedAISummaryQueueState } from "./feed-ai-summary";
 import { bindTagToPost } from "./tag";
 import { clearFeedCache } from "./clear-feed-cache";
@@ -13,6 +14,15 @@ export { clearFeedCache } from "./clear-feed-cache";
 // Lazy-loaded modules for WordPress import
 let XMLParser: any;
 let html2md: any;
+
+function parseFeedId(value: string): number | null {
+    if (!/^[1-9]\d*$/.test(value)) {
+        return null;
+    }
+
+    const id = Number(value);
+    return Number.isSafeInteger(id) ? id : null;
+}
 
 async function initWPModules() {
     if (!XMLParser) {
@@ -85,8 +95,9 @@ export function FeedService(): Hono<{
             limit: limit_num + 1,
         }))).map(({ content, hashtags, summary, ...other }: any) => {
             const avatar = extractImageWithMetadata(content);
+            const plainText = stripMarkdown(content);
             return {
-                summary: summary.length > 0 ? summary : content.length > 100 ? content.slice(0, 100) : content,
+                summary: summary.length > 0 ? summary : plainText.length > 100 ? plainText.slice(0, 100) : plainText,
                 hashtags: hashtags.map(({ hashtag }: any) => hashtag),
                 avatar,
                 ...other
@@ -194,11 +205,12 @@ export function FeedService(): Hono<{
         const admin = c.get('admin');
         const uid = c.get('uid');
         const id = c.req.param('id');
-        const id_num = parseInt(id);
-        const cacheKey = `feed_${id}`;
+        const id_num = parseFeedId(id);
+        const cacheKey = id_num === null ? `feed_alias_${id}` : `feed_id_${id_num}`;
+        const where = id_num === null ? eq(feeds.alias, id) : eq(feeds.id, id_num);
 
         const feed = await profileAsync(c, 'feed_detail_cache_db', () => cache.getOrSet(cacheKey, () => db.query.feeds.findFirst({
-            where: or(eq(feeds.id, id_num), eq(feeds.alias, id)),
+            where,
             with: {
                 hashtags: {
                     columns: {},
@@ -275,16 +287,14 @@ export function FeedService(): Hono<{
         const db = c.get('db');
         const cache = c.get('cache');
         const id = c.req.param('id');
-        let id_num: number;
+        let id_num = parseFeedId(id);
 
-        if (isNaN(parseInt(id))) {
+        if (id_num === null) {
             const aliasRecord = await profileAsync(c, 'feed_adjacent_alias_lookup', () => db.select({ id: feeds.id }).from(feeds).where(eq(feeds.alias, id)));
             if (aliasRecord.length === 0) {
                 return c.text("Not found", 404);
             }
             id_num = aliasRecord[0].id;
-        } else {
-            id_num = parseInt(id);
         }
 
         const feed = await profileAsync(c, 'feed_adjacent_current', () => db.query.feeds.findFirst({
@@ -301,11 +311,10 @@ export function FeedService(): Hono<{
         function formatAndCacheData(feed: any, feedDirection: "previous_feed" | "next_feed") {
             if (feed) {
                 const hashtags_flatten = feed.hashtags.map((f: any) => f.hashtag);
+                const plainText = stripMarkdown(feed.content);
                 const summary = feed.summary.length > 0
                     ? feed.summary
-                    : feed.content.length > 50
-                        ? feed.content.slice(0, 50)
-                        : feed.content;
+                    : plainText.length > 50 ? plainText.slice(0, 50) : plainText;
                 const cacheKey = `${feed.id}_${feedDirection}_${id_num}`;
                 const cacheData = {
                     id: feed.id,
@@ -446,7 +455,7 @@ export function FeedService(): Hono<{
         }
 
         await profileAsync(c, 'feed_top_db', () => db.update(feeds).set({ top }).where(eq(feeds.id, feed.id)));
-        await profileAsync(c, 'feed_top_cache_invalidate', () => clearFeedCache(cache, feed.id, null, null));
+        await profileAsync(c, 'feed_top_cache_invalidate', () => clearFeedCache(cache, feed.id, feed.alias, feed.alias));
         return c.text('Updated');
     });
 
@@ -523,8 +532,9 @@ export function SearchService(): Hono<{
             },
             orderBy: [desc(feeds.createdAt), desc(feeds.updatedAt)],
         })))).map(({ content, hashtags, summary, ...other }: any) => {
+            const plainText = stripMarkdown(content);
             return {
-                summary: summary.length > 0 ? summary : content.length > 100 ? content.slice(0, 100) : content,
+                summary: summary.length > 0 ? summary : plainText.length > 100 ? plainText.slice(0, 100) : plainText,
                 hashtags: hashtags.map(({ hashtag }: any) => hashtag),
                 ...other
             };
@@ -660,4 +670,3 @@ type FeedItem = {
     updatedAt: Date;
     tags?: string[];
 }
-
