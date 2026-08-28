@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import type { AppContext, DB } from "../core/hono-types";
 import { feeds } from "../db/schema";
 
+const GOOGLE_SITE_VERIFICATION = "xnE3uH_oRbF_-icqL3zR-AdrF185GNP2i_pguNp3dBA";
+
 function robotsTxt(origin: string) {
   return `User-agent: *\nAllow: /\n\nDisallow: /admin/\nDisallow: /login\nDisallow: /profile\nDisallow: /search/\nDisallow: /writing/\nDisallow: /callback\nDisallow: /api/\n\nSitemap: ${origin}/sitemap.xml\n`;
 }
@@ -62,7 +64,7 @@ export function SEOService(): Hono {
     const description = (trimmedSummary || trimmedAiSummary || fallback).slice(0, 160);
     const modified = feed.updatedAt || feed.createdAt;
     const content = await renderArticle(feed.content || "");
-    const body = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><meta name="robots" content="index,follow"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonLd({ "@context": "https://schema.org", "@type": "Article", headline: title, description, author: { "@type": "Person", name: feed.user?.username || "" }, dateModified: modified ? new Date(modified).toISOString() : undefined, mainEntityOfPage: canonical })}</script></head><body><main><article><h1>${escapeHtml(title)}</h1>${modified ? `<time datetime="${new Date(modified).toISOString()}">${new Date(modified).toLocaleDateString("zh-CN")}</time>` : ""}<div>${content}</div></article></main></body></html>`;
+    const body = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><meta name="robots" content="index,follow"><meta name="google-site-verification" content="${GOOGLE_SITE_VERIFICATION}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonLd({ "@context": "https://schema.org", "@type": "Article", headline: title, description, author: { "@type": "Person", name: feed.user?.username || "" }, dateModified: modified ? new Date(modified).toISOString() : undefined, mainEntityOfPage: canonical })}</script></head><body><main><article><h1>${escapeHtml(title)}</h1>${modified ? `<time datetime="${new Date(modified).toISOString()}">${new Date(modified).toLocaleDateString("zh-CN")}</time>` : ""}<div>${content}</div></article></main></body></html>`;
     return c.body(body, 200, { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "public, max-age=300, s-maxage=3600" });
   });
   return app;
