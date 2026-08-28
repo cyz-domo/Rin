@@ -5,12 +5,13 @@ import { ConfigService } from "../services/config";
 import { FaviconService } from "../services/favicon";
 import { FeedService, SearchService, WordPressService } from "../services/feed";
 import { FriendService } from "../services/friends";
+import { HomepageService } from "../services/homepage";
 import { MomentsService } from "../services/moments";
 import { RSSService } from "../services/rss";
-import { SitemapService } from "../services/sitemap";
 import { BlobService, StorageService } from "../services/storage";
 import { TagService } from "../services/tag";
 import { UserService } from "../services/user";
+import { SEOService } from "../services/seo";
 
 export function registerRoutes(app: RinApp) {
   app.get("/", (c) => c.text("Hi"));
@@ -23,12 +24,13 @@ export function registerRoutes(app: RinApp) {
   app.route("/storage", StorageService());
   app.route("/blob", BlobService());
   app.route("/friend", FriendService());
+  app.route("/homepage", HomepageService());
   app.route("/moments", MomentsService());
   app.route("/user", UserService());
   app.route("/auth", PasswordAuthService());
   app.route("/config", ConfigService());
   app.route("/", RSSService());
-  app.route("/", SitemapService());
+  app.route("/", SEOService());
   app.route("/favicon", FaviconService());
   app.route("/favicon.ico", FaviconService());
 }

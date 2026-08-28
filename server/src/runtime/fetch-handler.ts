@@ -1,6 +1,6 @@
 import { getApp } from "./app-instance";
 
-const ROOT_FEED_PATTERN = /^\/(rss\.xml|atom\.xml|rss\.json|feed\.json|feed\.xml)$/;
+const ROOT_FEED_PATTERN = /^\/(rss\.xml|atom\.xml|rss\.json|feed\.json|feed\.xml|robots\.txt|sitemap\.xml)$/;
 const APP_PUBLIC_ROUTE_PATTERN = /^\/(favicon|favicon\.ico)(?:\/|$)/;
 // 由 Worker 直接处理的元数据路由（sitemap / robots），需在静态资源分支之前路由到 Hono 应用
 const APP_META_ROUTE_PATTERN = /^\/(sitemap\.xml|robots\.txt)$/;
@@ -29,6 +29,17 @@ function isMetaRoute(pathname: string) {
 
 function isStaticAssetRequest(pathname: string) {
   return /\.\w+$/.test(pathname);
+}
+
+function isNoIndexRoute(pathname: string) {
+  return /^\/(admin(?:\/|$)|login(?:\/|$)|profile(?:\/|$)|search(?:\/|$)|writing(?:\/|$)|callback(?:\/|$))/.test(pathname);
+}
+
+function withNoIndex(response: Response, pathname: string) {
+  if (!isNoIndexRoute(pathname)) return response;
+  const headers = new Headers(response.headers);
+  headers.set("X-Robots-Tag", "noindex, follow");
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 async function tryServeAsset(request: Request, env: Env) {
@@ -96,7 +107,7 @@ export async function handleFetch(
 
   const indexResponse = await serveSpaEntry(request, env);
   if (indexResponse) {
-    return indexResponse;
+    return withNoIndex(indexResponse, pathname);
   }
 
   return new Response("Hi", { status: 200 });
