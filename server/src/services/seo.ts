@@ -9,8 +9,12 @@ function escapeHtml(value: unknown) {
   return String(value ?? "").replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] || char);
 }
 
-function renderPlainArticle(markdown: string) {
-  return markdown.split(/\r?\n\s*\r?\n/).filter(Boolean).map((block) => `<p>${escapeHtml(block).replace(/\r?\n/g, "<br>")}</p>`).join("\n");
+async function renderArticle(markdown: string) {
+  const [{ unified }, remarkParse, remarkGfm, remarkRehype, rehypeStringify] = await Promise.all([
+    import("unified"), import("remark-parse"), import("remark-gfm"), import("remark-rehype"), import("rehype-stringify"),
+  ]);
+  const file = await unified().use(remarkParse.default).use(remarkGfm.default).use(remarkRehype.default).use(rehypeStringify.default).process(markdown);
+  return String(file);
 }
 
 function jsonLd(value: Record<string, unknown>) {
@@ -52,7 +56,8 @@ export function SEOService(): Hono {
     const title = feed.title || "Untitled article";
     const description = (feed.summary || feed.content || "").replace(/[#*_`>\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 160);
     const modified = feed.updatedAt || feed.createdAt;
-    const body = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><meta name="robots" content="index,follow"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonLd({ "@context": "https://schema.org", "@type": "Article", headline: title, description, author: { "@type": "Person", name: feed.user?.username || "" }, dateModified: modified ? new Date(modified).toISOString() : undefined, mainEntityOfPage: canonical })}</script></head><body><main><article><h1>${escapeHtml(title)}</h1>${modified ? `<time datetime="${new Date(modified).toISOString()}">${new Date(modified).toLocaleDateString("zh-CN")}</time>` : ""}<div>${renderPlainArticle(feed.content || "")}</div></article></main></body></html>`;
+    const content = await renderArticle(feed.content || "");
+    const body = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><meta name="robots" content="index,follow"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><script type="application/ld+json">${jsonLd({ "@context": "https://schema.org", "@type": "Article", headline: title, description, author: { "@type": "Person", name: feed.user?.username || "" }, dateModified: modified ? new Date(modified).toISOString() : undefined, mainEntityOfPage: canonical })}</script></head><body><main><article><h1>${escapeHtml(title)}</h1>${modified ? `<time datetime="${new Date(modified).toISOString()}">${new Date(modified).toLocaleDateString("zh-CN")}</time>` : ""}<div>${content}</div></article></main></body></html>`;
     return c.body(body, 200, { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "public, max-age=300, s-maxage=3600" });
   });
   return app;
