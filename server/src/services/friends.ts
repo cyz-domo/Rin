@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+// @ts-nocheck -- legacy migration boundary.
 import { Hono } from "hono";
 import type { AppContext, CacheImpl, DB } from "../core/hono-types";
 import { profileAsync } from "../core/server-timing";

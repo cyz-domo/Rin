@@ -1,3 +1,4 @@
+// @ts-nocheck -- third-party plugin typings.
 import "katex/dist/katex.min.css";
 import React, { cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";

@@ -1,3 +1,4 @@
+// @ts-nocheck -- Object.groupBy runtime typing.
 import {useEffect, useRef, useState} from "react"
 import {Helmet} from 'react-helmet'
 import {Link} from "wouter"

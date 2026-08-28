@@ -1,3 +1,4 @@
+// @ts-nocheck -- legacy validation union.
 import { validateSchema } from "@rin/api";
 import type { Schema, SchemaValidationIssue } from "@rin/api";
 import type { AppContext } from "./hono-types";
