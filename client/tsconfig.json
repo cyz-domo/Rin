@@ -1,7 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2024",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "noEmit": true,
@@ -11,8 +11,10 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "types": ["vite/client", "bun-types"]
   },
   "include": ["src"],
+  "exclude": ["src/**/__tests__/**"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
