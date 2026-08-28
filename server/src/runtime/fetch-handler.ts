@@ -31,6 +31,15 @@ function isStaticAssetRequest(pathname: string) {
   return /\.\w+$/.test(pathname);
 }
 
+function isPublicArticleRequest(pathname: string) {
+  return /^\/feed\/[^/]+$/.test(pathname);
+}
+
+function isCrawler(request: Request) {
+  const agent = request.headers.get("user-agent") || "";
+  return /Googlebot|bingbot|Baiduspider|YandexBot|DuckDuckBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(agent);
+}
+
 function isNoIndexRoute(pathname: string) {
   return /^\/(admin(?:\/|$)|login(?:\/|$)|profile(?:\/|$)|search(?:\/|$)|writing(?:\/|$)|callback(?:\/|$))/.test(pathname);
 }
@@ -84,6 +93,11 @@ export async function handleFetch(
 
   if (isRootFeedRequest(pathname)) {
     return getApp().fetch(request, env, executionContext);
+  }
+
+  if (isPublicArticleRequest(pathname) && request.method === "GET" && isCrawler(request)) {
+    const articleRequest = new Request(new URL(`/seo/article/${pathname.slice("/feed/".length)}`, url.origin), request);
+    return getApp().fetch(articleRequest, env);
   }
 
   if (isApiRequest(pathname)) {
