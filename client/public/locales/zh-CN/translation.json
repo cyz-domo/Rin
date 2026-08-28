@@ -193,6 +193,24 @@
   "github_login": "Github 登录",
   "hashtags": "标签",
   "home": "首页",
+  "homepage": {
+    "title": "主页",
+    "add_link": "添加链接",
+    "edit_link": "编辑链接",
+    "delete_link": "删除链接",
+    "link_title": "标题",
+    "link_url": "链接地址",
+    "link_description": "描述（可选）",
+    "no_links": "还没有添加任何链接",
+    "delete_confirm": "确定要删除这个链接吗？",
+    "create_success": "链接添加成功",
+    "update_success": "链接更新成功",
+    "delete_success": "链接删除成功",
+    "sort_order": "排序",
+    "error": {
+      "empty_fields": "标题和链接地址不能为空"
+    }
+  },
   "index": {
     "back": "返回首页",
     "empty": {

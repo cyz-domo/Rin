@@ -257,6 +257,37 @@ export interface MomentListResponse {
 }
 
 // ============================================================================
+// Homepage / User Link Types
+// ============================================================================
+
+export interface UserLink {
+  id: number;
+  title: string;
+  url: string;
+  description?: string;
+  sort_order: number;
+  userId: number;
+  username?: string;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserLinkRequest {
+  title: string;
+  url: string;
+  description?: string;
+  sort_order?: number;
+}
+
+export interface UpdateUserLinkRequest {
+  title?: string;
+  url?: string;
+  description?: string;
+  sort_order?: number;
+}
+
+// ============================================================================
 // Config Types
 // ============================================================================
 
@@ -375,6 +406,13 @@ export const API_PATHS = {
 
   // RSS
   RSS_GET: (name: string) => `/${encodeURIComponent(name)}`,
+
+  // Homepage
+  HOMEPAGE_LIST: '/api/homepage',
+  HOMEPAGE_MINE: '/api/homepage/mine',
+  HOMEPAGE_CREATE: '/api/homepage',
+  HOMEPAGE_UPDATE: (id: number) => `/api/homepage/${id}`,
+  HOMEPAGE_DELETE: (id: number) => `/api/homepage/${id}`,
 } as const;
 
 export type APIEndpoint = typeof API_PATHS;

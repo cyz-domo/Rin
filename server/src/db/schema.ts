@@ -181,3 +181,21 @@ export const feedHashtagsRelations = relations(feedHashtags, ({ one }) => ({
         references: [hashtags.id],
     }),
 }));
+
+export const userLinks = sqliteTable("user_links", {
+    id: integer("id").primaryKey(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    description: text("description").default(""),
+    sort_order: integer("sort_order").default(0).notNull(),
+    uid: integer("uid").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    createdAt: created_at,
+    updatedAt: updated_at,
+});
+
+export const userLinksRelations = relations(userLinks, ({ one }) => ({
+    user: one(users, {
+        fields: [userLinks.uid],
+        references: [users.id],
+    }),
+}));

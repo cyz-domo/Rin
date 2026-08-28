@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
 // @ts-nocheck -- legacy migration boundary.
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import type { AppContext, CacheImpl, DB } from "../core/hono-types";
 import { profileAsync } from "../core/server-timing";
@@ -236,7 +236,7 @@ export async function friendCrontab(
         return;
     }
     
-    const friend_list = await db.query.friends.findMany();
+    const friend_list = await db.select().from(friends);
     console.info(`total friends: ${friend_list.length}`);
     
     let health = 0;

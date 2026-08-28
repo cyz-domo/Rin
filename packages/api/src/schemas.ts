@@ -127,3 +127,21 @@ export const searchSchema = t.Object({
   page: t.Number({ optional: true }),
   limit: t.Number({ optional: true }),
 });
+
+// ============================================================================
+// Homepage / User Link Schemas
+// ============================================================================
+
+export const userLinkCreateSchema = t.Object({
+  title: t.String(),
+  url: t.String(),
+  description: t.String({ optional: true }),
+  sort_order: t.Numeric({ optional: true }),
+});
+
+export const userLinkUpdateSchema = t.Object({
+  title: t.String({ optional: true }),
+  url: t.String({ optional: true }),
+  description: t.String({ optional: true }),
+  sort_order: t.Numeric({ optional: true }),
+});

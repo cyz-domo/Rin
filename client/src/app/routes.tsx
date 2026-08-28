@@ -19,6 +19,7 @@ import { FriendsPage } from "../page/friends";
 import { HealthPage } from "../page/health";
 import { HashtagPage } from "../page/hashtag";
 import { HashtagsPage } from "../page/hashtags";
+import { HomepagePage } from "../page/homepage";
 import { LoginPage } from "../page/login";
 import { MomentsPage } from "../page/moments";
 import { ProfilePage } from "../page/profile";
@@ -98,6 +99,10 @@ export function AppRoutes() {
 
       <AppRoute path="/profile">
         <ProfilePage />
+      </AppRoute>
+
+      <AppRoute path="/homepage">
+        <HomepagePage />
       </AppRoute>
 
       <TocRoute path="/feed/:id">

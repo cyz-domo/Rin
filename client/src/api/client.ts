@@ -33,6 +33,9 @@ import type {
   AuthStatus,
   LoginRequest,
   LoginResponse,
+  UserLink,
+  CreateUserLinkRequest,
+  UpdateUserLinkRequest,
 } from "@rin/api";
 
 export interface SettingsConfigResponse {
@@ -621,6 +624,38 @@ class WordPressAPI {
 }
 
 /**
+ * Homepage / User Link API methods
+ */
+class HomepageAPI {
+  constructor(private http: HttpClient) {}
+
+  // GET /api/homepage
+  async list(): Promise<ApiResponse<UserLink[]>> {
+    return this.http.get<UserLink[]>("/api/homepage");
+  }
+
+  // GET /api/homepage/mine
+  async mine(): Promise<ApiResponse<UserLink[]>> {
+    return this.http.get<UserLink[]>("/api/homepage/mine");
+  }
+
+  // POST /api/homepage
+  async create(body: CreateUserLinkRequest): Promise<ApiResponse<{ success: boolean; id: number }>> {
+    return this.http.post<{ success: boolean; id: number }>("/api/homepage", body);
+  }
+
+  // PUT /api/homepage/:id
+  async update(id: number, body: UpdateUserLinkRequest): Promise<ApiResponse<{ success: boolean }>> {
+    return this.http.put<{ success: boolean }>(`/api/homepage/${id}`, body);
+  }
+
+  // DELETE /api/homepage/:id
+  async delete(id: number): Promise<ApiResponse<{ success: boolean }>> {
+    return this.http.delete<{ success: boolean }>(`/api/homepage/${id}`);
+  }
+}
+
+/**
  * RSS API methods - direct fetch for RSS feeds
  */
 class RSSAPI {
@@ -656,6 +691,7 @@ export class ApiClient {
   comment: CommentAPI;
   user: UserAPI;
   friend: FriendAPI;
+  homepage: HomepageAPI;
   moments: MomentsAPI;
   config: ConfigAPI;
   aiConfig: AIConfigAPI;
@@ -672,6 +708,7 @@ export class ApiClient {
     this.comment = new CommentAPI(this.http);
     this.user = new UserAPI(this.http);
     this.friend = new FriendAPI(this.http);
+    this.homepage = new HomepageAPI(this.http);
     this.moments = new MomentsAPI(this.http);
     this.config = new ConfigAPI(this.http);
     this.aiConfig = new AIConfigAPI(this.http);

@@ -193,6 +193,24 @@
   "github_login": "Github ログイン",
   "hashtags": "ラベル",
   "home": "ホーム",
+  "homepage": {
+    "title": "ホームページ",
+    "add_link": "リンクを追加",
+    "edit_link": "リンクを編集",
+    "delete_link": "リンクを削除",
+    "link_title": "タイトル",
+    "link_url": "URL",
+    "link_description": "説明（任意）",
+    "no_links": "まだリンクが追加されていません",
+    "delete_confirm": "このリンクを削除してもよろしいですか？",
+    "create_success": "リンクが追加されました",
+    "update_success": "リンクが更新されました",
+    "delete_success": "リンクが削除されました",
+    "sort_order": "並び順",
+    "error": {
+      "empty_fields": "タイトルとURLを入力してください"
+    }
+  },
   "index": {
     "back": "ホームに戻る",
     "empty": {

@@ -193,6 +193,24 @@
   "github_login": "Github 登入",
   "hashtags": "標籤",
   "home": "首頁",
+  "homepage": {
+    "title": "主頁",
+    "add_link": "新增連結",
+    "edit_link": "編輯連結",
+    "delete_link": "刪除連結",
+    "link_title": "標題",
+    "link_url": "連結地址",
+    "link_description": "描述（可選）",
+    "no_links": "還沒有新增任何連結",
+    "delete_confirm": "確定要刪除這個連結嗎？",
+    "create_success": "連結新增成功",
+    "update_success": "連結更新成功",
+    "delete_success": "連結刪除成功",
+    "sort_order": "排序",
+    "error": {
+      "empty_fields": "標題和連結地址不能為空"
+    }
+  },
   "index": {
     "back": "返回首頁",
     "empty": {
