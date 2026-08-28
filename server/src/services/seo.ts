@@ -39,7 +39,7 @@ export function SEOService(): Hono {
   });
   app.get("/seo/article/:id", async (c: AppContext) => {
     const db = c.get("db") as DB;
-    const id = c.req.param("id");
+    const id = c.req.param("id") || "";
     const numericId = Number.parseInt(id, 10);
     const where = Number.isNaN(numericId) ? eq(feeds.alias, id) : eq(feeds.id, numericId);
     const feed = await db.query.feeds.findFirst({
