@@ -3,6 +3,18 @@ import { encodeBlurhash } from "./blurhash";
 
 export const DEFAULT_IMAGE_MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+const WEBP_COMPRESSION_QUALITY = 0.85;
+const MAX_UPLOAD_IMAGE_DIMENSION = 2560;
+const MIN_COMPRESSIBLE_IMAGE_SIZE = 100 * 1024;
+
+// Canvas re-encoding drops animated GIF frames, SVG is vector, and WebP is
+// already the target format, so those are uploaded untouched.
+const UNCOMPRESSIBLE_IMAGE_TYPES = new Set([
+  "image/gif",
+  "image/svg+xml",
+  "image/webp",
+]);
+
 export type UploadedImageResult = {
   url: string;
   blurhash?: string;
@@ -246,10 +258,59 @@ export async function enrichMarkdownImageMetadata(content: string): Promise<Mark
   };
 }
 
+function renameToWebP(fileName: string) {
+  return `${fileName.replace(/\.[^.]+$/, "")}.webp`;
+}
+
+export async function compressImageToWebP(file: File): Promise<File | null> {
+  if (
+    !isImageFile(file) ||
+    UNCOMPRESSIBLE_IMAGE_TYPES.has(file.type) ||
+    file.size <= MIN_COMPRESSIBLE_IMAGE_SIZE
+  ) {
+    return null;
+  }
+
+  try {
+    const image = await loadImage(file);
+    const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+    if (!longestSide) {
+      return null;
+    }
+
+    const scale = Math.min(1, MAX_UPLOAD_IMAGE_DIMENSION / longestSide);
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return null;
+    }
+
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", WEBP_COMPRESSION_QUALITY);
+    });
+
+    // Browsers without WebP encoding silently fall back to PNG here.
+    if (!blob || blob.type !== "image/webp" || blob.size >= file.size) {
+      return null;
+    }
+
+    return new File([blob], renameToWebP(file.name), { type: "image/webp" });
+  } catch {
+    // Undecodable inputs (e.g. HEIC outside Safari) upload the original file.
+    return null;
+  }
+}
+
 export async function uploadImageFile(file: File): Promise<UploadedImageResult> {
+  const uploadFile = (await compressImageToWebP(file)) ?? file;
   const [uploadResult, metadataResult] = await Promise.allSettled([
-    client.storage.upload(file, file.name),
-    generateImageMetadata(file),
+    client.storage.upload(uploadFile, uploadFile.name),
+    generateImageMetadata(uploadFile),
   ]);
 
   if (uploadResult.status === "rejected") {
