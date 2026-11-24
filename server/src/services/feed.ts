@@ -22,6 +22,7 @@ import { HyperLogLog } from "../utils/hyperloglog";
 import { extractImageWithMetadata } from "../utils/image";
 import { stripMarkdown } from "../utils/markdown";
 import { syncFeedAISummaryQueueState } from "./feed-ai-summary";
+import { notifyIndexNow } from "./indexnow";
 import { bindTagToPost } from "./tag";
 import { clearFeedCache, clearFeedCollectionCaches } from "./clear-feed-cache";
 export { clearFeedCache } from "./clear-feed-cache";
@@ -206,6 +207,10 @@ export function FeedService(): Hono<{
             resetSummary: true,
         }));
         await profileAsync(c, 'feed_create_cache_invalidate', () => clearFeedCollectionCaches(cache));
+
+        if (!draft && listed) {
+            notifyIndexNow(c, [`/feed/${result.insertedId}`]);
+        }
 
         return c.json(result);
     }, {
@@ -455,6 +460,11 @@ export function FeedService(): Hono<{
         }
 
         await profileAsync(c, 'feed_update_cache_invalidate', () => clearFeedCache(cache, id_num, feed.alias, alias || null));
+
+        if (!isDraft && listed) {
+            notifyIndexNow(c, [`/feed/${id_num}`]);
+        }
+
         return c.text('Updated');
     }), { message: 'Permission denied', status: 403 }));
 
